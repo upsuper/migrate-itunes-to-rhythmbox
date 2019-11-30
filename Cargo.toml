@@ -1,0 +1,19 @@
+[package]
+name = "migrate-itunes-to-rhythmbox"
+version = "0.1.0"
+authors = ["Xidorn Quan <me@upsuper.org>"]
+edition = "2018"
+license = "GPL-3.0-or-later"
+publish = false
+
+[dependencies]
+anyhow = "1.0.22"
+by_address = "1.0.4"
+chrono = { version = "0.4.9", features = ["serde"] }
+dirs = "2.0.2"
+elementtree = "0.5.0"
+log = "0.4.8"
+plist = "0.5.1"
+serde = { version = "1.0.102", features = ["derive"] }
+stderrlog = "0.4.3"
+structopt = "0.3.4"
