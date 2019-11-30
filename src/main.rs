@@ -1,4 +1,4 @@
-use crate::itunes_library::ItunesLibrary;
+use crate::itunes_library::{ItunesLibrary, Track, TrackId};
 use crate::track_key::TrackKey;
 use anyhow::{anyhow, ensure, Context, Result};
 use by_address::ByAddress;
@@ -8,7 +8,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::fs::File;
 use std::io::{BufReader, BufWriter};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use stderrlog::Timestamp;
 use structopt::StructOpt;
 
@@ -72,6 +72,19 @@ fn main() -> Result<()> {
         "duplicate song in iTunes library"
     );
 
+    let (rhythmdb_path, playlists_path) =
+        backup_rhythmbox_files(&rhythmbox_path).context("failed to backup Rhythmbox files")?;
+
+    let track_locations = sync_to_database(&rhythmdb_path, &itunes_track_map)
+        .context("failed to synchronize to Rhythmbox database")?;
+
+    migrate_playlists(&playlists_path, &itunes_library, &track_locations)
+        .context("failed to migrate playlists")?;
+
+    Ok(())
+}
+
+fn backup_rhythmbox_files(rhythmbox_path: &Path) -> Result<(PathBuf, PathBuf)> {
     info!("Backing up existing Rhythmbox files...");
     const RHYTHMDB_FILENAME: &str = "rhythmdb.xml";
     const RHYTHMDB_BACKUP_FILENAME: &str = "rhythmdb.xml.bak";
@@ -93,9 +106,15 @@ fn main() -> Result<()> {
         playlists_bak.display(),
     );
     fs::copy(&playlists_path, &playlists_bak)?;
+    Ok((rhythmdb_path, playlists_path))
+}
 
+fn sync_to_database(
+    rhythmdb_path: &Path,
+    itunes_track_map: &HashMap<TrackKey<'_>, &Track>,
+) -> Result<HashMap<TrackId, String>> {
     info!("Reading Rhythmbox database...");
-    let rhythmdb = File::open(&rhythmdb_path).context("failed to open database file")?;
+    let rhythmdb = File::open(rhythmdb_path).context("failed to open database file")?;
     let mut rhythmdb =
         Element::from_reader(BufReader::new(rhythmdb)).context("failed to read database")?;
     ensure!(
@@ -107,7 +126,7 @@ fn main() -> Result<()> {
         "unknown database version",
     );
 
-    info!("Scanning Rhythmbox database...");
+    info!("Synchronizing to Rhythmbox database...");
     let mut unused_itunes_tracks = itunes_track_map
         .values()
         .copied()
@@ -199,6 +218,14 @@ fn main() -> Result<()> {
         .to_writer_with_options(BufWriter::new(rhythmdb_file), options)
         .context("failed to update database")?;
 
+    Ok(track_locations)
+}
+
+fn migrate_playlists(
+    playlists_path: &Path,
+    itunes_library: &ItunesLibrary,
+    track_locations: &HashMap<TrackId, String>,
+) -> Result<()> {
     info!("Reading Rhythmbox playlists...");
     let playlists = File::open(&playlists_path).context("failed to open playlists file")?;
     let mut playlists =
