@@ -1,8 +1,7 @@
 use serde::de::{self, Visitor};
-use serde::export::fmt::Error;
-use serde::export::Formatter;
 use serde::{Deserialize, Deserializer};
 use std::convert::TryFrom;
+use std::fmt::{Error, Formatter};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct TrackId(pub u64);
