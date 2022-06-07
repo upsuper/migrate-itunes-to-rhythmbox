@@ -15,7 +15,7 @@ impl<'a> From<&'a Track> for TrackKey<'a> {
         TrackKey {
             name: &track.name,
             artist: track.artist.as_ref().map(String::as_ref),
-            album: track.album.as_ref().map(String::as_str),
+            album: track.album.as_deref(),
             disc_number: track.disc_number,
             track_number: track.track_number,
         }

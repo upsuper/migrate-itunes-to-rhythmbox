@@ -1,6 +1,5 @@
 use serde::de::{self, Visitor};
 use serde::{Deserialize, Deserializer};
-use std::convert::TryFrom;
 use std::fmt::{Error, Formatter};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -28,8 +27,7 @@ impl<'de> Visitor<'de> for TrackIdVisitor {
     where
         E: de::Error,
     {
-        let id = TryFrom::try_from(v).map_err(E::custom)?;
-        Ok(TrackId(id))
+        Ok(TrackId(v))
     }
 
     fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
