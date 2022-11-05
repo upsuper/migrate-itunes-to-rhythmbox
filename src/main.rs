@@ -2,6 +2,7 @@ use crate::itunes_library::{ItunesLibrary, Track, TrackId};
 use crate::track_key::TrackKey;
 use anyhow::{anyhow, ensure, Context, Result};
 use by_address::ByAddress;
+use clap::Parser;
 use elementtree::{Element, QName, WriteOptions, XmlProlog};
 use log::{info, warn};
 use std::collections::{HashMap, HashSet};
@@ -10,29 +11,28 @@ use std::fs::File;
 use std::io::{BufReader, BufWriter};
 use std::path::{Path, PathBuf};
 use stderrlog::Timestamp;
-use structopt::StructOpt;
 
 mod itunes_library;
 mod track_key;
 
-#[derive(Debug, StructOpt)]
+#[derive(Debug, Parser)]
 struct Opt {
     /// Path to the iTunes Library XML file
-    #[structopt(name = "iTunes Library file", parse(from_os_str))]
+    #[arg(name = "iTunes Library file")]
     itunes_library: PathBuf,
     /// Path to the Rhythmbox path
     ///
     /// When not specified,
     /// it is `$XDG_DATA_HOME/rhythmbox` or `$HOME/.local/share/rhythmbox` by default.
-    #[structopt(name = "Rhythmbox path", short, long, parse(from_os_str))]
+    #[arg(name = "Rhythmbox path", short, long)]
     rhythmbox_path: Option<PathBuf>,
     /// Silence all output
-    #[structopt(short, long)]
+    #[arg(short, long)]
     quiet: bool,
 }
 
 fn main() -> Result<()> {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
     stderrlog::new()
         .module(module_path!())
         // 2 for info level
