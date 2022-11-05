@@ -227,7 +227,7 @@ fn migrate_playlists(
     track_locations: &HashMap<TrackId, String>,
 ) -> Result<()> {
     info!("Reading Rhythmbox playlists...");
-    let playlists = File::open(&playlists_path).context("failed to open playlists file")?;
+    let playlists = File::open(playlists_path).context("failed to open playlists file")?;
     let mut playlists =
         Element::from_reader(BufReader::new(playlists)).context("failed to read playlists")?;
     ensure!(
@@ -289,7 +289,7 @@ fn migrate_playlists(
 
     info!("Saving the playlists...");
     let playlists_file =
-        File::create(&playlists_path).context("failed to open playlists to update")?;
+        File::create(playlists_path).context("failed to open playlists to update")?;
     let options = WriteOptions::new().set_xml_prolog(Some(XmlProlog::Version10));
     playlists
         .to_writer_with_options(BufWriter::new(playlists_file), options)
